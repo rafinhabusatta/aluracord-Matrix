@@ -2,6 +2,7 @@ import { Box, Button, Text, TextField, Image } from '@skynexui/components'
 import { useRouter } from 'next/router'
 import appConfig from '../config.json'
 import React from 'react'
+export { username }
 
 function Titulo(props) {
   const Tag = props.tag || 'h1'

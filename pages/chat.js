@@ -1,10 +1,29 @@
 import { Box, Text, TextField, Image, Button } from '@skynexui/components'
 import React from 'react'
 import appConfig from '../config.json'
+import { createClient } from '@supabase/supabase-js'
+import { username } from './index.js'
+
+const SUPABASE_ANON_KEY =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTY0MzY1NTg3NSwiZXhwIjoxOTU5MjMxODc1fQ.gGpMFoSChR_Kg86kxqOM0wx1o94zRWenK_RM6qtJBw0'
+const SUPABASE_URL = 'https://cpzjnyntquyracmmvfsx.supabase.co'
+const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
 export default function ChatPage() {
   const [mensagem, setMensagem] = React.useState('')
   const [ListaDeMensagens, setListaDeMensagens] = React.useState([])
+
+  React.useEffect(() => {
+    supabaseClient
+      .from('mensagens')
+      .select('*')
+      .order('id', { ascending: false })
+      .then(({ data }) => {
+        console.log('Dados da consulta:', data)
+        setListaDeMensagens(data)
+      })
+  }, [])
+
   /*
   //usuário
   -usuário digita no campo textarea
@@ -19,13 +38,25 @@ export default function ChatPage() {
 
   function handleNovaMensagem(novaMensagem) {
     const mensagem = {
-      id: ListaDeMensagens.length,
-      de: 'rafinhabusatta',
+      //id: ListaDeMensagens.length + 1,
+      de: { username },
       texto: novaMensagem
     }
-    setListaDeMensagens([mensagem, ...ListaDeMensagens])
+
+    supabaseClient
+      .from('mensagens')
+      .insert([
+        //Tem que ser um objeto com os mesmos campos do supabase
+        mensagem
+      ])
+      .then(({ data }) => {
+        console.log('Criando mensagem:', data)
+        setListaDeMensagens([data[0], ...ListaDeMensagens])
+      })
+
     setMensagem('')
   }
+
   return (
     <Box
       styleSheet={{
@@ -108,6 +139,18 @@ export default function ChatPage() {
                 color: appConfig.theme.colors.neutrals[200]
               }}
             />
+            <Button
+              label="Enviar"
+              buttonColors={{
+                contrastColor: appConfig.theme.colors.neutrals['000'],
+                mainColor: appConfig.theme.colors.primary[500],
+                mainColorLight: appConfig.theme.colors.primary[400],
+                mainColorStrong: appConfig.theme.colors.primary[600]
+              }}
+              onClick={() => {
+                handleNovaMensagem(mensagem)
+              }}
+            />
           </Box>
         </Box>
       </Box>
@@ -179,7 +222,7 @@ function MessageList(props) {
                   display: 'inline-block',
                   marginRight: '8px'
                 }}
-                src={`https://github.com/${username}.png`}
+                src={`https://github.com/${mensagem.de}.png`}
               />
               <Text tag="strong">{mensagem.de}</Text>
               <Text
